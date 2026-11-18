@@ -12,7 +12,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import BOT_TOKEN
-from handlers import router
+from handlers import notify_admin, router
 
 WEBHOOK_PATH = "/webhook"
 
@@ -28,6 +28,7 @@ async def run_polling() -> None:
     bot, dp = build()
     # Drop updates that piled up while the bot was offline.
     await bot.delete_webhook(drop_pending_updates=True)
+    await notify_admin(bot, "Resource bot started (polling). If this follows a crash, check Render logs.")
     await dp.start_polling(bot)
 
 
@@ -47,6 +48,7 @@ def run_webhook(base_url: str) -> None:
             secret_token=secret,
             drop_pending_updates=True,
         )
+        await notify_admin(bot, "Resource bot started (webhook). If this follows a crash, check Render logs.")
 
     async def on_shutdown(bot: Bot) -> None:
         # Leave the webhook set: Telegram retries deliveries while we wake up.

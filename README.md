@@ -42,6 +42,7 @@ Prerequisites (already done by the project owner): a bot created in @BotFather, 
 |---|---|---|---|
 | `BOT_TOKEN` | yes | | Token from @BotFather |
 | `CHANNEL_ID` | yes | | Destination channel id, with the `-100` prefix (looks like `-100xxxxxxxxxx`) |
+| `ADMIN_ID` | no | | Telegram numeric user id for startup and send failure alerts |
 | `INCLUDE_UPLOADER` | no | `true` | Add a `From:` line to the caption |
 | `MAX_FILES_PER_SESSION` | no | `30` | Cap on files per upload session |
 | `SEND_DELAY_SECONDS` | no | `3` | Pause between channel posts (rate limits) |

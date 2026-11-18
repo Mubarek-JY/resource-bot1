@@ -29,6 +29,9 @@ BOT_TOKEN: str = _require("BOT_TOKEN")
 # Bot API channel ids look like -100xxxxxxxxxx (note the -100 prefix).
 CHANNEL_ID: int = int(_require("CHANNEL_ID"))
 
+# Telegram user id to receive operational alerts; unset disables alerts.
+ADMIN_ID: int | None = int(os.getenv("ADMIN_ID", "").strip() or 0) or None
+
 # Put "From: @username" (or the numeric user id) in the channel caption.
 INCLUDE_UPLOADER: bool = _bool("INCLUDE_UPLOADER", True)
 

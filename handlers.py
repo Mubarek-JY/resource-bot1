@@ -16,6 +16,7 @@ from aiogram.types import CallbackQuery, Message, User
 
 import keyboards
 from config import (
+    ADMIN_ID,
     CHANNEL_ID,
     INCLUDE_UPLOADER,
     MAX_COURSE_NAME_LENGTH,
@@ -185,6 +186,16 @@ async def _cancel_session(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
 
 
+async def notify_admin(bot: Bot, text: str) -> None:
+    """Send an operational alert without letting alert delivery break the bot."""
+    if ADMIN_ID is None:
+        return
+    try:
+        await bot.send_message(ADMIN_ID, text[:4000])
+    except Exception:
+        log.exception("Could not notify admin")
+
+
 # --------------------------------------------------------------- commands
 
 @router.message(CommandStart())
@@ -208,6 +219,41 @@ async def on_cancel_button(callback: CallbackQuery, state: FSMContext) -> None:
     await _cancel_session(callback, state)
 
 
+@router.callback_query(F.data == "back")
+async def on_back_button(callback: CallbackQuery, state: FSMContext) -> None:
+    current = await state.get_state()
+    steps = {
+        Upload.year.state: (Upload.department, keyboards.department_kb, "Choose the department:",
+                            ("dept_tag", "year", "semester", "type_code", "course")),
+        Upload.semester.state: (Upload.year, lambda: keyboards.year_kb(back=True), CHOOSE_YEAR,
+                                ("year", "semester", "type_code", "course")),
+        Upload.type.state: (Upload.semester, lambda: keyboards.semester_kb(back=True), CHOOSE_SEMESTER,
+                            ("semester", "type_code", "course")),
+        Upload.course_name.state: (Upload.type, lambda: keyboards.type_kb(back=True), CHOOSE_TYPE,
+                                   ("type_code", "course")),
+    }
+    step = steps.get(current)
+    if step is None:
+        await callback.answer(EXPIRED, show_alert=True)
+        return
+    target, keyboard, prompt, keys_to_clear = step
+    data = await state.get_data()
+    for key in keys_to_clear:
+        data.pop(key, None)
+    await state.set_data(data)
+    await state.set_state(target)
+    upto_by_state = {
+        Upload.year.state: "dept",
+        Upload.semester.state: "year",
+        Upload.type.state: "sem",
+    }
+    upto = upto_by_state.get(target.state)
+    if upto:
+        prompt = f"{progress_text(data, upto)}\n\n{prompt}"
+    await _edit_from_callback(callback, prompt, keyboard())
+    await callback.answer()
+
+
 # ------------------------------------------------------ button-step flow
 
 @router.callback_query(Upload.department, F.data.startswith("dept:"))
@@ -220,7 +266,7 @@ async def on_department(callback: CallbackQuery, state: FSMContext) -> None:
     data = await state.get_data()
     await state.set_state(Upload.year)
     await _edit_from_callback(
-        callback, f"{progress_text(data, 'dept')}\n\n{CHOOSE_YEAR}", keyboards.year_kb()
+        callback, f"{progress_text(data, 'dept')}\n\n{CHOOSE_YEAR}", keyboards.year_kb(back=True)
     )
     await callback.answer()
 
@@ -235,7 +281,7 @@ async def on_year(callback: CallbackQuery, state: FSMContext) -> None:
     data = await state.get_data()
     await state.set_state(Upload.semester)
     await _edit_from_callback(
-        callback, f"{progress_text(data, 'year')}\n\n{CHOOSE_SEMESTER}", keyboards.semester_kb()
+        callback, f"{progress_text(data, 'year')}\n\n{CHOOSE_SEMESTER}", keyboards.semester_kb(back=True)
     )
     await callback.answer()
 
@@ -250,7 +296,7 @@ async def on_semester(callback: CallbackQuery, state: FSMContext) -> None:
     data = await state.get_data()
     await state.set_state(Upload.type)
     await _edit_from_callback(
-        callback, f"{progress_text(data, 'sem')}\n\n{CHOOSE_TYPE}", keyboards.type_kb()
+        callback, f"{progress_text(data, 'sem')}\n\n{CHOOSE_TYPE}", keyboards.type_kb(back=True)
     )
     await callback.answer()
 
@@ -265,7 +311,7 @@ async def on_type(callback: CallbackQuery, state: FSMContext) -> None:
     data = await state.get_data()
     await state.set_state(Upload.course_name)
     await _edit_from_callback(
-        callback, f"{progress_text(data, 'type')}\n\n{TYPE_COURSE}", keyboards.cancel_only_kb()
+        callback, f"{progress_text(data, 'type')}\n\n{TYPE_COURSE}", keyboards.cancel_only_kb(back=True)
     )
     await callback.answer()
 
@@ -309,7 +355,7 @@ async def on_confirm(callback: CallbackQuery, state: FSMContext) -> None:
         data = await state.get_data()
         await state.set_state(Upload.course_name)
         await _edit_from_callback(
-            callback, f"{progress_text(data, 'type')}\n\n{TYPE_COURSE}", keyboards.cancel_only_kb()
+            callback, f"{progress_text(data, 'type')}\n\n{TYPE_COURSE}", keyboards.cancel_only_kb(back=True)
         )
         await callback.answer()
     elif action == "cancel":
@@ -368,6 +414,11 @@ async def on_done(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
         sent, failed = await copy_files_to_channel(bot, chat_id, file_ids, caption)
     except Exception:
         log.exception("Upload failed for user %s", callback.from_user.id)
+        await notify_admin(
+            bot,
+            f"Resource upload failed for user {callback.from_user.id} "
+            f"(@{callback.from_user.username or 'no username'}). Check Render logs for details.",
+        )
         await state.clear()
         await _edit_from_callback(callback, SEND_ERROR)
         return
@@ -375,6 +426,11 @@ async def on_done(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
     text = f"Sent {sent} of {total} file(s). Thank you!\nSend /start to add another resource."
     if failed:
         text += f"\n{failed} file(s) could not be sent."
+        await notify_admin(
+            bot,
+            f"Resource send failures: {failed}/{total} file(s) failed for user "
+            f"{callback.from_user.id} (@{callback.from_user.username or 'no username'}).",
+        )
     await _edit_from_callback(callback, text)
     await state.clear()
     log.info(

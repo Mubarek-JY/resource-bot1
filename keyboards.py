@@ -23,37 +23,46 @@ def department_kb() -> InlineKeyboardMarkup:
     return b.as_markup()
 
 
-def year_kb() -> InlineKeyboardMarkup:
+def year_kb(*, back: bool = False) -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
     for n in YEARS:
         b.button(text=str(n), callback_data=f"year:{n}")
     b.add(_cancel_button())
-    b.adjust(len(YEARS), 1)
+    if back:
+        b.button(text="Back", callback_data="back")
+    b.adjust(len(YEARS), 1, *([1] if back else []))
     return b.as_markup()
 
 
-def semester_kb() -> InlineKeyboardMarkup:
+def semester_kb(*, back: bool = False) -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
     for n in SEMESTERS:
         b.button(text=str(n), callback_data=f"sem:{n}")
     b.add(_cancel_button())
-    b.adjust(len(SEMESTERS), 1)
+    if back:
+        b.button(text="Back", callback_data="back")
+    b.adjust(len(SEMESTERS), 1, *([1] if back else []))
     return b.as_markup()
 
 
-def type_kb() -> InlineKeyboardMarkup:
+def type_kb(*, back: bool = False) -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
     for code, label, _tag in TYPES:
         b.button(text=label, callback_data=f"type:{code}")
     b.add(_cancel_button())
+    if back:
+        b.button(text="Back", callback_data="back")
     n = len(TYPES)
-    b.adjust(*([2] * (n // 2)), *([1] if n % 2 else []), 1)
+    b.adjust(*([2] * (n // 2)), *([1] if n % 2 else []), 1, *([1] if back else []))
     return b.as_markup()
 
 
-def cancel_only_kb() -> InlineKeyboardMarkup:
+def cancel_only_kb(*, back: bool = False) -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
     b.add(_cancel_button())
+    if back:
+        b.button(text="Back", callback_data="back")
+        b.adjust(1, 1)
     return b.as_markup()
 
 
