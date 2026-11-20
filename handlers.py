@@ -23,7 +23,14 @@ from config import (
     MAX_FILES_PER_SESSION,
     SEND_DELAY_SECONDS,
 )
-from data import DEPARTMENTS_BY_TAG, SEMESTERS, TYPES_BY_CODE, YEARS
+from data import (
+    DEPARTMENTS_BY_TAG,
+    FRESHMAN_TAG,
+    NON_FRESHMAN_YEARS,
+    SEMESTERS,
+    TYPES_BY_CODE,
+    years_for_department,
+)
 from states import Upload
 
 log = logging.getLogger(__name__)
@@ -222,10 +229,21 @@ async def on_cancel_button(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(F.data == "back")
 async def on_back_button(callback: CallbackQuery, state: FSMContext) -> None:
     current = await state.get_state()
+    data = await state.get_data()
+    if current == Upload.semester.state and data.get("dept_tag") == FRESHMAN_TAG:
+        for key in ("year", "semester", "type_code", "course"):
+            data.pop(key, None)
+        await state.set_data(data)
+        await state.set_state(Upload.department)
+        await _edit_from_callback(callback, "Choose the department:", keyboards.department_kb())
+        await callback.answer()
+        return
     steps = {
         Upload.year.state: (Upload.department, keyboards.department_kb, "Choose the department:",
                             ("dept_tag", "year", "semester", "type_code", "course")),
-        Upload.semester.state: (Upload.year, lambda: keyboards.year_kb(back=True), CHOOSE_YEAR,
+        Upload.semester.state: (Upload.year,
+                                lambda: keyboards.year_kb(years=NON_FRESHMAN_YEARS, back=True),
+                                CHOOSE_YEAR,
                                 ("year", "semester", "type_code", "course")),
         Upload.type.state: (Upload.semester, lambda: keyboards.semester_kb(back=True), CHOOSE_SEMESTER,
                             ("semester", "type_code", "course")),
@@ -237,7 +255,6 @@ async def on_back_button(callback: CallbackQuery, state: FSMContext) -> None:
         await callback.answer(EXPIRED, show_alert=True)
         return
     target, keyboard, prompt, keys_to_clear = step
-    data = await state.get_data()
     for key in keys_to_clear:
         data.pop(key, None)
     await state.set_data(data)
@@ -264,9 +281,22 @@ async def on_department(callback: CallbackQuery, state: FSMContext) -> None:
         return
     await state.update_data(dept_tag=tag)
     data = await state.get_data()
+    if tag == FRESHMAN_TAG:
+        await state.update_data(year=1)
+        await state.set_state(Upload.semester)
+        data = await state.get_data()
+        await _edit_from_callback(
+            callback,
+            f"{progress_text(data, 'year')}\n\n{CHOOSE_SEMESTER}",
+            keyboards.semester_kb(back=True),
+        )
+        await callback.answer()
+        return
     await state.set_state(Upload.year)
     await _edit_from_callback(
-        callback, f"{progress_text(data, 'dept')}\n\n{CHOOSE_YEAR}", keyboards.year_kb(back=True)
+        callback,
+        f"{progress_text(data, 'dept')}\n\n{CHOOSE_YEAR}",
+        keyboards.year_kb(years=NON_FRESHMAN_YEARS, back=True),
     )
     await callback.answer()
 
@@ -274,7 +304,10 @@ async def on_department(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(Upload.year, F.data.startswith("year:"))
 async def on_year(callback: CallbackQuery, state: FSMContext) -> None:
     raw = callback.data.split(":", 1)[1]
-    if not raw.isdigit() or int(raw) not in YEARS:
+    data = await state.get_data()
+    dept_tag = data.get("dept_tag")
+    valid_years = years_for_department(dept_tag) if dept_tag else NON_FRESHMAN_YEARS
+    if not raw.isdigit() or int(raw) not in valid_years:
         await callback.answer("Invalid year.", show_alert=True)
         return
     await state.update_data(year=int(raw))

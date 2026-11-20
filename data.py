@@ -7,6 +7,7 @@ the buttons.
 
 # (display name, hashtag label)
 DEPARTMENTS: list[tuple[str, str]] = [
+    ("Freshman", "Freshman"),
     ("Architecture", "ARCH"),
     ("Biotechnology", "BIOTECH"),
     ("Civil Engineering", "Ceng"),
@@ -26,7 +27,13 @@ DEPARTMENTS: list[tuple[str, str]] = [
 DEPARTMENTS_BY_TAG: dict[str, str] = {tag: name for name, tag in DEPARTMENTS}
 
 YEARS: list[int] = [1, 2, 3, 4, 5]
+NON_FRESHMAN_YEARS: list[int] = [2, 3, 4, 5]
+FRESHMAN_TAG = "Freshman"
 SEMESTERS: list[int] = [1, 2]
+
+
+def years_for_department(dept_tag: str) -> list[int]:
+    return [1] if dept_tag == FRESHMAN_TAG else NON_FRESHMAN_YEARS
 
 # (callback code, display label, hashtag label)
 TYPES: list[tuple[str, str, str]] = [

@@ -74,11 +74,12 @@ Each prompt repeats the choices made so far, so the student always sees context.
 - Saves that message's id as `prompt_msg_id`. State: `Upload.department`.
 
 **Step 1: department** (state `Upload.department`)
-- Keyboard: 13 buttons from `data.DEPARTMENTS`, 2 per row (last row has 1). Button text is the display name; `callback_data` is `dept:<tag>` (for example `dept:Sweng`). Cancel row at the bottom.
-- On press: validate the tag, save `dept_tag`, edit message to `Department: <display name>\n\nChoose the year:` with the year keyboard. State: `Upload.year`.
+- Keyboard: 14 buttons from `data.DEPARTMENTS`, 2 per row. Button text is the display name; `callback_data` is `dept:<tag>` (for example `dept:Sweng`). Cancel row at the bottom.
+- On a regular department: validate the tag, save `dept_tag`, and edit the message to `Department: <display name>\n\nChoose the year:` with year buttons 2 through 5. State: `Upload.year`.
+- On `Freshman`: save `dept_tag` and default `year` to 1, then edit the message to `Department: Freshman\nYear: 1\n\nChoose the semester:` with the semester keyboard. State: `Upload.semester`.
 
 **Step 2: year** (state `Upload.year`)
-- Keyboard: one row with 1 to 5, `callback_data` `year:<n>`. Cancel row.
+- Keyboard: one row with 2 to 5, `callback_data` `year:<n>`. Cancel row.
 - On press: validate, save `year`, edit to `Department: ...\nYear: <n>\n\nChoose the semester:`. State: `Upload.semester`.
 
 **Step 3: semester** (state `Upload.semester`)
@@ -201,7 +202,7 @@ Walk through each path manually with a real bot and the channel:
 ## 14. Open decisions (current defaults)
 
 - **Uploader attribution** in the caption: default on, via `INCLUDE_UPLOADER`. The owner may want to tell students about it in the welcome text or switch it off.
-- **Back buttons**: not in v1, only Cancel.
+- **Back buttons**: available between department, year, semester, type, and course-name steps.
 - **Session timeout**: none in v1.
 - **Course name normalisation**: stored as typed; cleanup is left for the later reorganisation.
 - **Hosting**: not decided (any VPS or free host running `python bot.py` under `systemd`, `pm2` or Docker).

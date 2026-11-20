@@ -23,14 +23,14 @@ def department_kb() -> InlineKeyboardMarkup:
     return b.as_markup()
 
 
-def year_kb(*, back: bool = False) -> InlineKeyboardMarkup:
+def year_kb(*, years: list[int] = YEARS, back: bool = False) -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
-    for n in YEARS:
+    for n in years:
         b.button(text=str(n), callback_data=f"year:{n}")
     b.add(_cancel_button())
     if back:
         b.button(text="Back", callback_data="back")
-    b.adjust(len(YEARS), 1, *([1] if back else []))
+    b.adjust(len(years), 1, *([1] if back else []))
     return b.as_markup()
 
 
