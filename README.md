@@ -75,7 +75,7 @@ Each prompt repeats the choices made so far, so the student always sees context.
 
 **Step 1: department** (state `Upload.department`)
 - Keyboard: 14 buttons from `data.DEPARTMENTS`, 2 per row. Button text is the display name; `callback_data` is `dept:<tag>` (for example `dept:Sweng`). Cancel row at the bottom.
-- On a regular department: validate the tag, save `dept_tag`, and edit the message to `Department: <display name>\n\nChoose the year:` with year buttons 2 through 5. State: `Upload.year`.
+- On a regular department: validate the tag, save `dept_tag`, and edit the message to `Department: <display name>\n\nChoose the year:` with year buttons 2 through 5, or 2 through 4 for Biotechnology, Food Science & Nutrition, Geology, and Industrial Chemistry. State: `Upload.year`.
 - On `Freshman`: save `dept_tag` and default `year` to 1, then edit the message to `Department: Freshman\nYear: 1\n\nChoose the semester:` with the semester keyboard. State: `Upload.semester`.
 
 **Step 2: year** (state `Upload.year`)

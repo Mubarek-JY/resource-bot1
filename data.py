@@ -28,12 +28,17 @@ DEPARTMENTS_BY_TAG: dict[str, str] = {tag: name for name, tag in DEPARTMENTS}
 
 YEARS: list[int] = [1, 2, 3, 4, 5]
 NON_FRESHMAN_YEARS: list[int] = [2, 3, 4, 5]
+FOUR_YEAR_DEPARTMENTS: set[str] = {"BIOTECH", "FSAN", "GEO", "InCh"}
 FRESHMAN_TAG = "Freshman"
 SEMESTERS: list[int] = [1, 2]
 
 
 def years_for_department(dept_tag: str) -> list[int]:
-    return [1] if dept_tag == FRESHMAN_TAG else NON_FRESHMAN_YEARS
+    if dept_tag == FRESHMAN_TAG:
+        return [1]
+    if dept_tag in FOUR_YEAR_DEPARTMENTS:
+        return [2, 3, 4]
+    return NON_FRESHMAN_YEARS
 
 # (callback code, display label, hashtag label)
 TYPES: list[tuple[str, str, str]] = [

@@ -242,7 +242,9 @@ async def on_back_button(callback: CallbackQuery, state: FSMContext) -> None:
         Upload.year.state: (Upload.department, keyboards.department_kb, "Choose the department:",
                             ("dept_tag", "year", "semester", "type_code", "course")),
         Upload.semester.state: (Upload.year,
-                                lambda: keyboards.year_kb(years=NON_FRESHMAN_YEARS, back=True),
+                                lambda: keyboards.year_kb(
+                                    years=years_for_department(data.get("dept_tag", "")), back=True
+                                ),
                                 CHOOSE_YEAR,
                                 ("year", "semester", "type_code", "course")),
         Upload.type.state: (Upload.semester, lambda: keyboards.semester_kb(back=True), CHOOSE_SEMESTER,
@@ -296,7 +298,7 @@ async def on_department(callback: CallbackQuery, state: FSMContext) -> None:
     await _edit_from_callback(
         callback,
         f"{progress_text(data, 'dept')}\n\n{CHOOSE_YEAR}",
-        keyboards.year_kb(years=NON_FRESHMAN_YEARS, back=True),
+        keyboards.year_kb(years=years_for_department(tag), back=True),
     )
     await callback.answer()
 
