@@ -87,7 +87,7 @@ Each prompt repeats the choices made so far, so the student always sees context.
 - On press: validate, save `semester`, edit to `Department: ...\nYear: ...\nSemester: <n>\n\nChoose the resource type:`. State: `Upload.type`.
 
 **Step 4: type** (state `Upload.type`)
-- Keyboard: 5 buttons from `data.TYPES`, 2 per row, `callback_data` `type:<code>` with codes `mid`, `final`, `ppt`, `reference`, `module`. Cancel row.
+- Keyboard: 7 buttons from `data.TYPES`, 2 per row, `callback_data` `type:<code>` with codes `mid`, `final`, `slide`, `worksheet`, `assignment`, `reference`, `module`. Cancel row.
 - On press: validate against `TYPES_BY_CODE`, save `type_code`, edit to `Department: ...\nYear: ...\nSemester: ...\nType: <label>\n\nType the course name (for example: Data Structures):` with a Cancel button only. State: `Upload.course_name`.
 
 **Step 5: course name** (state `Upload.course_name`)
@@ -133,7 +133,7 @@ Course: Data Structures
 From: @username
 ```
 
-- Line 1: department tag, `Y<year>`, `S<semester>`, type hashtag label (`MidExam`, `FinalExam`, `PPT`, `Reference`, `Module`). Hashtags only for the button-based fields.
+- Line 1: department tag, `Y<year>`, `S<semester>`, type hashtag label (`MidExam`, `FinalExam`, `Slide`, `Worksheet`, `Assignment`, `Reference`, `Module`). Hashtags only for the button-based fields.
 - Line 2: the course name as typed, not as a hashtag (free text makes unreliable hashtags).
 - Line 3 only when `INCLUDE_UPLOADER` is true: `@username`, or the numeric user id when there is no username.
 - The same caption goes on every file of the batch so each one is searchable by hashtag.

@@ -464,7 +464,10 @@ async def on_done(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
             f"Resource send failures: {failed}/{total} file(s) failed for user "
             f"{callback.from_user.id} (@{callback.from_user.username or 'no username'}).",
         )
-    await _edit_from_callback(callback, text)
+    # Keep the upload prompt out of the conversation after completion. Send the
+    # result as a fresh message once all channel copies have finished.
+    await _delete_quietly(bot, chat_id, callback.message.message_id)
+    await bot.send_message(chat_id, text)
     await state.clear()
     log.info(
         "Upload done: user=%s dept=%s year=%s sem=%s type=%s sent=%s failed=%s",

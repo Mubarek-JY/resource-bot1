@@ -39,7 +39,9 @@ def years_for_department(dept_tag: str) -> list[int]:
 TYPES: list[tuple[str, str, str]] = [
     ("mid", "Mid Exam", "MidExam"),
     ("final", "Final Exam", "FinalExam"),
-    ("ppt", "PPT", "PPT"),
+    ("slide", "Slide", "Slide"),
+    ("worksheet", "Worksheet", "Worksheet"),
+    ("assignment", "Assignment", "Assignment"),
     ("reference", "Reference", "Reference"),
     ("module", "Module", "Module"),
 ]
